@@ -1,0 +1,130 @@
+﻿@model IEnumerable<MangerInstructions.Models.Instruction>
+@using Microsoft.AspNetCore.Http.Extensions
+@using Microsoft.AspNetCore.Localization
+@inject IViewLocalizer Localizer
+@{
+    ViewData["Title"] = "Manger Instructions";
+}
+
+<div>
+    <div class="row">
+        <div class="pull-right col-sm-3 col-md-2 col-lg-2">
+            @{
+                var requestCulture = Context.Features.Get<IRequestCultureFeature>();
+            }
+            <div>
+                <label>@Localizer["Language"]:</label>
+                @await Html.PartialAsync("_SelectLanguagePartial")
+            </div>
+
+        </div>
+    </div>
+    <hr class="visible-xs" />
+    <div>
+        @if (Model.Count() > 0)
+        {
+            <div class="col-sm-offset-0 col-md-offset-0 col-lg-offset-1 col-xs-12 col-sm-12 col-md-8 col-lg-8 text-center">
+                <a class="btn btn-default" asp-action="ByRating" asp-controller="Home">@Localizer["HighestRated"]</a>
+                <a class="btn btn-default" asp-action="Newest" asp-controller="Home">@Localizer["Newest"]</a>
+                <a class="btn btn-default" asp-action="Older" asp-controller="Home">@Localizer["Older"]</a>
+                <hr />
+            </div>
+        }
+        <!--Category-->
+        <div class="pull-right col-xs-10 col-sm-8 col-md-4 col-lg-3">
+            <h3>@Localizer["BrowseByCategory"]</h3>
+            @foreach (Category category in ViewBag.Category)
+            {
+                <div class="form-group-sm">
+                    &#8658; <a asp-action="SearchByCategory" asp-controller="Home" asp-route-index="@category.Index">@Localizer[category.Index]</a>
+                </div>
+            }
+            <p></p>
+            <!--Tags-->
+            @if (ViewBag.Tags.Count > 0)
+            {
+                <h3>@Localizer["PopularTags"]</h3>
+                var labelType = new[] { "label-danger", "label-info", "label-primary", "label-success", "label-warning" };
+                var random = new Random();
+
+                @foreach (KeyValuePair<String, int> tag in ViewBag.Tags)
+                {
+                    <a asp-action="SearchByTag" asp-controller="Home" asp-route-tag="@tag.Key"><span class="label @(labelType[random.Next() % labelType.Length])">@tag.Key</span></a>
+                }
+            }
+            <p></p>
+        </div>
+        <!--Posts-->
+        @{
+            var index = 0;
+            foreach (var instruction in Model)
+            {
+                index++;
+                <div class="well well-lg col-xs-offset-0 col-sm-offset-0 col-md-offset-0 col-lg-offset-1 col-xs-12 col-sm-12 col-md-8 col-lg-8">
+                    <div>
+                        <h4><strong><a asp-action="InstructionPage" asp-controller="Home" asp-route-Id="@instruction.Id">@instruction.Name</a></strong></h4>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-4 col-sm-4 col-md-3 col-lg-3">
+                            <a class="thumbnail">
+                                @{
+                                    String linkImage = null;
+                                    foreach (var step in instruction.Steps.OrderBy(i => i.Indexer))
+                                    {
+                                        if (step.ImageLinks.Count != 0)
+                                        {
+                                            linkImage = step.ImageLinks[0];
+                                            break;
+                                        }
+                                    }
+                                    if (linkImage == null)
+                                    {
+                                        <img src="~/images/404.png">
+                                    }
+                                    {
+                                        <img src="@linkImage">
+                                    }
+                                }
+                            </a>
+                        </div>
+                        <div>
+                            <p>
+                                @instruction.ShortDescription
+                            </p>
+                        </div>
+                    </div>
+                    <div>
+                        <div>
+                            <p>
+                                <i class="glyphicon glyphicon-user"></i> @Localizer["Author"] <a asp-action="UserPage" asp-controller="UserPage" asp-route-Id="@instruction.Author.Id">@instruction.Author.Name</a>
+                                | <i class="glyphicon glyphicon-calendar"></i> @instruction.DateTime.ToUniversalTime()
+                                | <i class="glyphicon glyphicon-cog"></i> <a asp-action="SearchByCategory" asp-controller="Home" asp-route-index="@instruction.CategoryIndex">@Localizer[instruction.CategoryIndex]</a>
+                                | <i class="glyphicon glyphicon-comment"></i> @Localizer["Comments"]: @instruction.Comments.Count
+                            <p></p>
+                            @if (instruction.Tags.Count != 0)
+                            {
+                                @: <i class="glyphicon glyphicon-tags"></i> @Localizer["Tags"] :
+                            }
+                            @foreach (var tag in instruction.Tags)
+                            {
+                                <a asp-action="SearchByTag" asp-controller="Home" asp-route-tag="@tag.TagName"><span class="label label-info">@tag.TagName</span></a>
+                            }
+                            <p></p>
+                            <div class="pull-right">
+                                <label>@Localizer["Rating"]:</label>
+                                <span id="@(index)_rate_1" class="glyphicon glyphicon-star-empty" style="cursor: pointer;"></span><span id="@(index)_rate_2" class="glyphicon glyphicon-star-empty" style="cursor: pointer;"></span><span id="@(index)_rate_3" class="glyphicon glyphicon-star-empty" style="cursor: pointer;"></span><span id="@(index)_rate_4" class="glyphicon glyphicon-star-empty" style="cursor: pointer;"></span><span id="@(index)_rate_5" class="glyphicon glyphicon-star-empty" style="cursor: pointer;"></span>
+                                <label id="@(index)_rating"></label>
+                                <script>
+                                    $(function () {
+                                        getVotes("@instruction.Id", "@(index)_rate_", "@(index)_rating");
+                                        setRateEvents("@instruction.Id", "@(index)_rate_", "@(index)_rating");
+                                    });
+                                </script>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>

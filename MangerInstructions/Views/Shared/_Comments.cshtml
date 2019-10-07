@@ -1,0 +1,61 @@
+﻿@model IEnumerable<Comment>
+@using System.Security.Claims
+@inject IViewLocalizer Localizer
+@{
+    var userId = User.Claims.FirstOrDefault(u => u.Type == ClaimTypes.NameIdentifier).Value;
+    foreach (var comment in Model)
+    {
+        <tr>
+            <td class="col-lg-2 text-center">
+                <div class="title alert-warning">
+                    <a asp-action="UserPage" asp-controller="UserPage" asp-route-Id="@comment.User.Id"><b>@comment.User.Name</b></a>
+                </div>
+            </td>
+            <td>
+                @if (comment.User.Id == userId)
+                {
+                    <button id="removeComment" onclick="remove('@comment.Id', this)" class="btn btn-danger btn-sm pull-right">@Localizer["Delete"]</button>
+                }
+                <p><i class="glyphicon glyphicon-calendar"></i>@comment.Time.ToUniversalTime()</p>
+                <hr />
+                <p>@comment.Text</p>
+                <div class="pull-right">
+                    <label id="countLikes_@comment.Id">@comment.Likes.Count</label>
+                    @if (comment.Likes.Any(l => l.User.Id == userId))
+                    {
+                        <a class="pull-right" onclick="like('@comment.Id')" style="cursor: pointer;"><i id="color_@comment.Id" class="glyphicon glyphicon-heart" style="color: red;"></i></a>
+                    }
+                    else
+                    {
+                        <a class="pull-right" onclick="like('@comment.Id')" style="cursor: pointer;"><i id="color_@comment.Id" class="glyphicon glyphicon-heart" style="color: gray;"></i></a>
+                    }
+                </div>
+            </td>
+        </tr>
+    }
+}
+<script>
+    function remove(id, button) {
+        $.post("/Home/RemoveComment",
+            {
+                idComment: id
+            });
+        button.disabled = true;
+    }
+    function like(id) {
+        $.post("/Home/Like",
+            {
+                idComment: id
+            });
+        var elememt = $("#color_" + id);
+        var countLikes = $("#countLikes_" + id);
+        if (elememt.css("color") === "rgb(255, 0, 0)") {
+            elememt.css("color", "gray");
+            $("#countLikes_" + id).text(parseInt(countLikes.text()) - 1);
+        }
+        else {
+            elememt.css("color", "red");
+            $("#countLikes_" + id).text(parseInt(countLikes.text()) + 1);
+        }
+    }
+</script>

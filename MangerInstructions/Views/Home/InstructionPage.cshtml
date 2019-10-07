@@ -1,0 +1,110 @@
+﻿@model MangerInstructions.Models.Instruction
+@inject IViewLocalizer Localizer
+@{
+    ViewData["Title"] = Model.Name;
+    Model.Steps = Model.Steps.OrderBy(i => i.Indexer).ToList();
+}
+<p></p>
+<div class="container">
+    <div class="row">
+        <div class="col-lg-offset-2 col-lg-8">
+            <h2 class="text-center">@Model.Name</h2>
+            <div class="row well well-sm">
+                <h3 class="text-center">@Localizer["Description"]</h3>
+                <p>@Model.ShortDescription</p>
+                <hr />
+                <h3 class="text-center">@Localizer["TableOfContents"]</h3>
+                <ul class="list-group">
+                    @for (int i = 0; i < Model.Steps.Count; ++i)
+                    {
+                        <li class="list-group-item">@(i + 1). <a href="#step_@i">@Model.Steps[i].Name</a></li>
+                    }
+                </ul>
+            </div>
+            @for (int i = 0; i < Model.Steps.Count(); ++i)
+            {
+                var step = Model.Steps[i];
+                <div class="row well well-sm">
+                    <h3 id="step_@i">@(i + 1). @step.Name</h3>
+                    <hr />
+                    <div class="col-lg-12">
+                        @foreach (var image in step.ImageLinks)
+                        {
+                            <div class="thumbnail col-lg-@(12 / step.ImageLinks.Count)">
+                                <img src="@image" />
+                            </div>
+                        }
+                    </div>
+                    <p id="markdowntext_@i">@step.Text</p>
+                </div>
+            }
+            <div class="row well well-sm">
+                <p>
+                    <i class="glyphicon glyphicon-user"></i> @Localizer["Author"] <a asp-action="UserPage" asp-controller="UserPage" asp-route-Id="@Model.Author.Id">@Model.Author.Name</a>
+                    | <i class="glyphicon glyphicon-calendar"></i> @Model.DateTime.ToUniversalTime()
+                    | <i class="glyphicon glyphicon-cog"></i> <a asp-action="SearchByCategory" asp-controller="Home" asp-route-index="@Model.CategoryIndex">@Localizer[Model.CategoryIndex]</a>
+                <p></p>
+                @if (Model.Tags.Count != 0)
+                {
+                    <i class="glyphicon glyphicon-tags"></i> @Localizer["Tags"] @::
+                }
+                @foreach (var tag in Model.Tags)
+                {
+                    <a asp-action="SearchByTag" asp-controller="Home" asp-route-tag="@tag.TagName"><span class="label label-info">@tag.TagName</span></a>
+                }
+                <p></p>
+                <div class="pull-right">
+                    <label>@Localizer["Rating"]:</label>
+                    <span id="rate_1" class="glyphicon glyphicon-star-empty" style="cursor: pointer;"></span><span id="rate_2" class="glyphicon glyphicon-star-empty" style="cursor: pointer;"></span><span id="rate_3" class="glyphicon glyphicon-star-empty" style="cursor: pointer;"></span><span id="rate_4" class="glyphicon glyphicon-star-empty" style="cursor: pointer;"></span><span id="rate_5" class="glyphicon glyphicon-star-empty" style="cursor: pointer;"></span>
+                    <label id="rating"></label>
+                </div>
+            </div>
+            <!--Comment area-->
+            @if (User.Identity.IsAuthenticated)
+            {
+                <div class="row panel panel-footer">
+                    <div id="addcomment" class="form-group">
+                        <label for="comment">@Localizer["AddComment"]:</label>
+                        <textarea id="textComment" name="text" class="form-control" rows="5" style="resize: vertical; min-height: 100px;"></textarea>
+                        <p></p>
+                        <button id="buttonComment" type="submit" name="idInstruction" value="@Model.Id" class="btn btn-default pull-right" disabled>@Localizer["AddComment"]</button>
+                    </div>
+                </div>
+            }
+            <!--Comments-->
+            <div class="row">
+                <table class="table table-bordered panel panel-footer">
+                    <tbody id="comments"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        for (var i = 0; i < @Model.Steps.Count; i++) {
+            var element = $("#markdowntext_" + i);
+            var text = element.text();
+            element.html(markdown.toHTML(text));
+        }
+        $("#buttonComment").on("click", function () {
+            var text = $("#textComment");
+            var idInstruction = $("#buttonComment").val();
+            $.post("/Home/AddComment",
+                {
+                    idInstruction: idInstruction,
+                    text: text.val()
+                });
+            text.val("");
+            $("#buttonComment").attr("disabled", true);
+        });
+        $("#comments").load("@Url.Action("LoadComments", "Home", new { idInstruction = Model.Id })");
+        var getComment = function () {
+            $("#comments").load("@Url.Action("LoadComments", "Home", new { idInstruction = Model.Id })");
+        }
+        setInterval(getComment, 3000);
+        getVotes("@Model.Id", "rate_", "rating");
+        setRateEvents("@Model.Id", "rate_", "rating");
+    });
+</script>

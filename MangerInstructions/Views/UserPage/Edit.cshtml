@@ -1,0 +1,82 @@
+﻿@model MangerInstructions.ViewModel.InstructionViewModel
+@inject IViewLocalizer Localizer
+@{
+    ViewData["Title"] = Localizer["Edit"];
+}
+
+<partial name="_ValidationScriptsPartial" />
+<div id="container" class="container">
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+            <form method="post" enctype="multipart/form-data">
+                <!-- Instruction -->
+                <div class="row">
+                    <h1>@Localizer["Instruction"]</h1>
+                    <div class="form-group">
+                        <label asp-for="Name">@Localizer["InstructionName"]:</label>
+                        <input asp-for="Name" type="text" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Category">@Localizer["Category"]:</label>
+                        <select asp-for="Category" class="form-control" asp-items="ViewBag.Categories"></select>
+                        <span asp-validation-for="Category" class="text-danger" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ShortDescription">@Localizer["ShortDescription"]:</label>
+                        <textarea class="form-control" maxlength="300" asp-for="ShortDescription" style="resize: vertical;"></textarea>
+                        <span>@Localizer["MaxCharacters"]: 300</span>
+                        <div>
+                            <span asp-validation-for="ShortDescription" class="text-danger" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div>
+                            <label>@Localizer["Tags"]:</label>
+                        </div>
+                        <input id="tags" type="text" asp-for="Tags" value="@Model.Tags" data-role="tagsinput" />
+                        <div>
+                            <span>@Localizer["MaxTags"]: 8</span>
+                        </div>
+                    </div>
+                </div>
+                <!--Steps-->
+                <div id="blockSteps" class="row">
+                    @{
+                        <partial name="_Step" for="@Model" />
+                    }
+                </div>
+                <div class="row">
+                    @if (Model.Steps.Count == 0)
+                    {
+                        <div class="form-group pull-left">
+                            <button type="submit" class="btn btn-success" asp-action="AddStep" asp-controller="UserPage">@Localizer["AddStep"]</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="form-group pull-left">
+                            @if (Model.Steps.Count < 16)
+                            {
+                                <button type="submit" class="btn btn-success" asp-action="AddStep" asp-controller="UserPage">@Localizer["AddStep"]</button>
+                            }
+                            <button formnovalidate="formnovalidate" type="submit" class="btn btn-danger" asp-action="DeleteStep" asp-controller="UserPage">@Localizer["DeleteStep"]</button>
+                        </div>
+                        <div class="form-group pull-right">
+                            <button type="submit" class="btn btn-primary" asp-action="CreateInstruction" asp-controller="UserPage">@Localizer["Save"]</button>
+                        </div>
+                    }
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(function () {
+            $('html, body').animate({ scrollTop: $(document).height() }, 'slow');
+        });
+    </script>
+}

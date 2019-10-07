@@ -1,0 +1,244 @@
+﻿@model MangerInstructions.Models.User
+@using Microsoft.AspNetCore.Http.Extensions
+@using Microsoft.AspNetCore.Localization
+@using System.Security.Claims
+@inject IViewLocalizer Localizer
+@{
+    ViewData["Title"] = Localizer["MyPage"];
+    var isAdmin = User.Claims.FirstOrDefault(t => t.Type == ClaimTypes.Role)?.Value == Role.Admin.ToString();
+}
+
+<div class="container">
+    <div class="row">
+        <p></p>
+        <!--Statistic-->
+        <div class="col-sm-3">
+            <ul class="list-group">
+                <li class="list-group-item text-muted">@Localizer["Profile"] @(Model.Role == Role.Admin ? "(Admin)" : "")</li>
+                @if (ViewBag.Owner)
+                {
+                    <li class="list-group-item text-right"><span class="pull-left"><strong>@Localizer["Name"]</strong></span><input id="nameEdit" class="form-control text-right" value="@Model.Name" /> </li>
+                    if (isAdmin)
+                    {
+                        <li class="list-group-item text-right"><span class="pull-left"><strong>Email</strong></span><input id="emailEditAsAdmin" onchange="changeUserEmail('@Model.Id', this)" class="form-control text-right" value="@Model.Email" /></li>
+                    }
+                    else
+                    {
+                        <li class="list-group-item text-right"><span class="pull-left"><strong>Email</strong></span>@Model.Email</li>
+                    }
+                }
+                else
+                {
+                    @if (isAdmin)
+                    {
+                        <li class="list-group-item text-right"><span class="pull-left"><strong>@Localizer["Name"]</strong></span><input id="nameEditAsAdmin" onchange="changeUserName('@Model.Id', this)" class="form-control text-right" value="@Model.Name" /> </li>
+                        <li class="list-group-item text-right"><span class="pull-left"><strong>Email</strong></span><input id="emailEditAsAdmin" onchange="changeUserEmail('@Model.Id', this)" class="form-control text-right" value="@Model.Email" /> </li>
+                    }
+                    else
+                    {
+                        <li class="list-group-item text-right"><span class="pull-left"><strong>@Localizer["Name"]</strong></span>@Model.Name</li>
+                    }
+                }
+            </ul>
+            <ul class="list-group">
+                <li class="list-group-item text-muted">@Localizer["Activity"]</li>
+                <li class="list-group-item text-right"><span class="pull-left"><strong>@Localizer["Instructions"]</strong></span>@Model.PersonalPage.Instructions.Count</li>
+                <li class="list-group-item text-right"><span class="pull-left"><strong>@Localizer["Comments"]</strong></span>@Model.Comments.Count</li>
+                <li class="list-group-item text-right"><span class="pull-left"><strong>@Localizer["Likes"]</strong></span>@Model.Likes.Count</li>
+            </ul>
+            <!--Language-->
+            <div>
+                @{
+                    var requestCulture = Context.Features.Get<IRequestCultureFeature>();
+                }
+                <div>
+                    <label>@Localizer["Language"]:</label>
+                    @await Html.PartialAsync("_SelectLanguagePartial")
+                </div>
+            </div>
+            @if (isAdmin)
+            {
+                <div>
+                    <hr />
+                    @if (Model.IsBlock)
+                    {
+                        <button id="blockUnblock" onclick="blockUnblock()" class="form-control btn-success">@Localizer["Unblock"]</button>
+                    }
+                    else
+                    {
+                        <button id="blockUnblock" onclick="blockUnblock()" class="form-control btn-danger">@Localizer["Block"]</button>
+                    }
+                    <hr />
+                    @if (Model.Role == Role.User)
+                    {
+                        <button id="role" onclick="role('@Model.Id')" class="form-control btn-success">@Localizer["AssignAsAdmin"]</button>
+                    }
+                    else
+                    {
+                        <button id="role" onclick="role('@Model.Id')" class="form-control btn-default">@Localizer["AssignAsUser"]</button>
+                    }
+                    <hr />
+                    <form asp-action="DeleteAccount" asp-controller="Admin" asp-route-id="@Model.Id">
+                        <button type="submit" onclick="return confirm('@Localizer["WarningMessage"]')" class="form-control btn btn-warning">@Localizer["DeleteAccount"]</button>
+                    </form>
+                    <hr />
+                    <script>
+                    function blockUnblock() {
+                        var element = $("#blockUnblock");
+                        if (element.hasClass("btn-success")) {
+                            element.text("@Localizer["Block"]");
+                            element.removeClass("btn-success").addClass("btn-danger");
+                        }
+                        else {
+                            element.text("@Localizer["Unblock"]");
+                            element.removeClass("btn-danger").addClass("btn-success");
+                        }
+                        $.post("/Admin/BlockUser",
+                            {
+                                Id: "@Model.Id"
+                            });
+                    }
+                    function role(userId) {
+                        var element = $("#role");
+                        if (element.hasClass("btn-success")) {
+                            element.text("@Localizer["AssignAsUser"]");
+                            element.removeClass("btn-success").addClass("btn-default");
+                        }
+                        else {
+                            element.text("@Localizer["AssignAsAdmin"]");
+                            element.removeClass("btn-default").addClass("btn-success");
+                        }
+                        $.post("/Admin/AssignAs",
+                            {
+                                Id: userId
+                            });
+                    }
+                    </script>
+                </div>
+            }
+        </div>
+        <div class="col-sm-9">
+            <!--Search-->
+            @if (ViewBag.Owner)
+            {
+                <form method="post" asp-action="SearchUserPage" asp-controller="UserPage" asp-route-Id="@Model.Id">
+                    <div class="col-sm-8 col-md-8 col-lg-8">
+                        <input name="textSearch" class="form-control" id="instructionInput" type="text" placeholder="@Localizer["PageSearch"]">
+                    </div>
+                </form>
+                <div class="visible-xs">
+                    <hr />
+                </div>
+                <div class="col-sm-4 col-md-4 col-lg-4">
+                    <a class="btn btn-success form-control" asp-action="Create" asp-controller="UserPage">@Localizer["Add"]</a>
+                </div>
+            }
+            else
+            {
+                <form method="post" asp-action="SearchUserPage" asp-controller="UserPage" asp-route-url="@Context.Request.GetDisplayUrl()">
+                    <div class="col-lg-12">
+                        <input name="textSearch" class="form-control" id="instructionInput" type="text" placeholder="@Localizer["PageSearch"]">
+                    </div>
+                </form>
+            }
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <br />
+            </div>
+            @if (Model.PersonalPage.Instructions.Count() > 0)
+            {
+                <div class="text-center">
+                    <a class="btn btn-default" asp-action="ByRatingForUser" asp-controller="UserPage" asp-route-Id="@Model.Id">@Localizer["HighestRated"]</a>
+                    <a class="btn btn-default" asp-action="NewestForUser" asp-controller="UserPage" asp-route-Id="@Model.Id">@Localizer["Newest"]</a>
+                    <a class="btn btn-default" asp-action="OlderForUser" asp-controller="UserPage" asp-route-Id="@Model.Id">@Localizer["Older"]</a>
+                    <hr />
+                </div>
+            }
+            <!--Begin post-->
+            @{
+                int index = 0;
+                foreach (var instruction in Model.PersonalPage.Instructions)
+                {
+                    index++;
+                    <div class="well well-sm col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                        @if (ViewBag.Owner)
+                        {
+                            <div class="btn-group pull-right">
+                                <form method="post">
+                                    <button type="submit" asp-action="Edit" asp-controller="UserPage" name="instructionId" value="@instruction.Id" class="btn btn-primary">@Localizer["Edit"]</button>
+                                    <button type="submit" asp-action="Delete" asp-controller="UserPage" name="instructionId" value="@instruction.Id" class="btn btn-danger">@Localizer["Delete"]</button>
+                                </form>
+                            </div>
+                        }
+                        <div>
+                            <h4><strong><a asp-action="InstructionPage" asp-controller="Home" asp-route-Id="@instruction.Id">@instruction.Name</a></strong></h4>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-4 col-sm-4 col-md-2 col-lg-2">
+                                <a class="thumbnail">
+                                    @{
+                                        String linkImage = null;
+                                        foreach (var step in instruction.Steps.OrderBy(i => i.Indexer))
+                                        {
+                                            if (step.ImageLinks.Count != 0)
+                                            {
+                                                linkImage = step.ImageLinks[0];
+                                                break;
+                                            }
+                                        }
+                                        if (linkImage == null)
+                                        {
+                                            <img src="~/images/404.png" alt="">
+                                        }
+                                        {
+                                            <img src="@linkImage" alt="">
+                                        }
+                                    }
+                                </a>
+                            </div>
+                            <div>
+                                <p>
+                                    @instruction.ShortDescription
+                                </p>
+                            </div>
+                        </div>
+                        <div>
+                            <div>
+                                <p>
+                                    <i class="glyphicon glyphicon-user"></i> @Localizer["Author"] <a asp-action="UserPage" asp-controller="UserPage" asp-route-Id="@instruction.Author.Id">@instruction.Author.Name</a>
+                                    | <i class="glyphicon glyphicon-calendar"></i> @instruction.DateTime.ToUniversalTime()
+                                    | <i class="glyphicon glyphicon-cog"></i> <a asp-action="SearchByCategory" asp-controller="Home" asp-route-index="@instruction.CategoryIndex">@Localizer[instruction.CategoryIndex]</a>
+                                    | <i class="glyphicon glyphicon-comment"></i> @Localizer["Comments"]: @instruction.Comments.Count
+                                    @if (instruction.Tags.Count != 0)
+                                    {
+                                        @:| <i class="glyphicon glyphicon-tags"></i> @Localizer["Tags"]  :
+                                    }
+                                    @foreach (var tag in instruction.Tags)
+                                    {
+                                        <a asp-action="SearchByTag" asp-controller="Home" asp-route-tag="@tag.TagName"><span class="label label-info">@tag.TagName</span></a>
+                                    }
+                                <p></p>
+                                <div class="pull-right">
+                                    <label>@Localizer["Rating"]:</label>
+                                    <span id="@(index)_rate_1" class="glyphicon glyphicon-star-empty" style="cursor: pointer;"></span><span id="@(index)_rate_2" class="glyphicon glyphicon-star-empty" style="cursor: pointer;"></span><span id="@(index)_rate_3" class="glyphicon glyphicon-star-empty" style="cursor: pointer;"></span><span id="@(index)_rate_4" class="glyphicon glyphicon-star-empty" style="cursor: pointer;"></span><span id="@(index)_rate_5" class="glyphicon glyphicon-star-empty" style="cursor: pointer;"></span>
+                                    <label id="@(index)_rating"></label>
+                                    <script>
+                                        $(function () {
+                                            getVotes("@instruction.Id", "@(index)_rate_", "@(index)_rating");
+                                            setRateEvents("@instruction.Id", "@(index)_rate_", "@(index)_rating");
+                                        });
+                                    </script>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            <!--End post-->
+        </div>
+    </div>
+</div>
+@if (isAdmin)
+{
+    <script src="~/js/admin.js"></script>
+}
+

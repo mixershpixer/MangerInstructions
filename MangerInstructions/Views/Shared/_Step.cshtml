@@ -1,0 +1,39 @@
+﻿@model MangerInstructions.ViewModel.InstructionViewModel
+@inject IViewLocalizer Localizer
+@for (int i = 0; i < Model.Steps.Count; ++i)
+{
+    <div id="step_@i">
+        <hr />
+        <h2>@Localizer["Step"] @(i + 1)</h2>
+        <div class="form-group">
+            <label asp-for="Steps[i].Name">@Localizer["StepName"]:</label>
+            <input asp-for="Steps[i].Name" type="text" maxlength="64" class="form-control" />
+            <span asp-validation-for="Steps[i].Name" class="text-danger" />
+        </div>
+        <div class="form-group">
+            <label asp-for="Steps[i].FormImages">@Localizer["Images"]:</label>
+            <div>
+                <div id="imageContainer_@i">
+                </div>
+                <div id="_imageContainer_@i">
+                    @for (int j = 0; j < Model.Steps[i].ImageLinks.Count; ++j)
+                    {
+                        <div id="currentImage">
+                            <div class="thumbnail col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                                <img id="image_@(i)_@(j)" src="@Model.Steps[i].ImageLinks[j]" />
+                                <input class="hidden" asp-for="Steps[i].ImageLinks[j]" type="text" />
+                            </div>
+                        </div>
+                    }
+                </div>
+                <input id="imageUpload_@i" class="hidden" asp-for="Steps[i].FormImages" onchange="readURL(this, @i);" accept="image/*" />
+                <button id="uploadButton" type="button" class="form-control" onclick="$('#imageUpload_@i').click();">Upload</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label asp-for="Steps[i].Text">@Localizer["Description"]:</label>
+            <textarea id="markdown" class="form-control" asp-for="Steps[i].Text" style="resize: vertical;" data-provide="markdown"></textarea>
+            <span asp-validation-for="Steps[i].Text" class="text-danger" />
+        </div>
+    </div>
+}

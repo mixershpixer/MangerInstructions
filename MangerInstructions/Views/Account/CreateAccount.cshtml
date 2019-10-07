@@ -1,0 +1,50 @@
+﻿@model MangerInstructions.ViewModel.RegisterUser
+@inject IViewLocalizer Localizer
+@{
+    ViewData["Title"] = Localizer["CreateAccount"];
+}
+
+<partial name="_ValidationScriptsPartial" />
+<form asp-action="CreateAccount" asp-controller="Account" asp-anti-forgery="true">
+    @if (ViewBag.Provider != null)
+    {
+        <div class="row">
+            <div class="alert alert-success text-center">
+                @Localizer["SuccessSocial"] <strong>@ViewBag.Provider!</strong>
+                @Localizer["LastStep"]
+            </div>
+        </div>
+    }
+    <h3 class="text-center">@Localizer["CreateAccount"]</h3>
+    <div class="container col-xs-offset-1 col-xs-10 col-md-offset-4 col-md-4 col-lg-offset-4 col-lg-4">
+        <div class="row">
+            <div>
+                <div class="form-group col-sm-12">
+                    <label>@Localizer["Name"]:</label>
+                    <input class="form-control" type="text" asp-for="Name" />
+                    <span asp-validation-for="Name" class="text-danger" />
+                </div>
+                <div class="form-group col-sm-12">
+                    <label>Email:</label>
+                    <input class="form-control" type="text" asp-for="Email" />
+                    <span asp-validation-for="Email" class="text-danger" />
+                </div>
+                <div class="form-group col-sm-12">
+                    <label>@Localizer["Password"]:</label>
+                    <input class="form-control" asp-for="Password" />
+                    <span asp-validation-for="Password" class="text-danger" />
+                </div>
+                <div class="form-group col-sm-12">
+                    <label>@Localizer["ConfirmPassword"]:</label>
+                    <input class="form-control" asp-for="ConfirmPassword" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger" />
+                </div>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group col-sm-12">
+                    <input class="btn btn-default" type="submit" value="@Localizer["Create"]" />
+                    @Localizer["Or"] <a asp-action="SignIn" asp-controller="Account">@Localizer["SignIn"]</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

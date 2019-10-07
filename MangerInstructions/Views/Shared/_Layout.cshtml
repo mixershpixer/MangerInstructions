@@ -1,0 +1,113 @@
+﻿@using System.Security.Claims
+@inject IViewLocalizer Localizer
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Manaher Instructions</title>
+
+    <environment include="Development">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+        @{
+            ViewBag.Theme = Context.Request.Cookies["theme"]?.ToString();
+            if (ViewBag.Theme == "dark")
+            {
+                <link id="themestyle" rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap-dark.css" />
+            }
+            else
+            {
+                <link id="themestyle" rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+            }
+        }
+        <link href="~/css/bootstrap-tagsinput.css" rel="stylesheet" />
+        <link href="~/css/bootstrap-tagsinput-typeahead.css" rel="stylesheet" />
+        <link href="~/css/bootstrap-markdown.min.css" rel="stylesheet" />
+        <link rel="stylesheet" href="~/css/site.css" />
+    </environment>
+
+    <environment exclude="Development">
+        <link rel="stylesheet" href="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.7/css/bootstrap.min.css"
+              asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
+              asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
+        <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
+    </environment>
+
+    <environment exclude="Development">
+        <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.3.1.min.js"
+                asp-fallback-src="~/lib/jquery/dist/jquery.min.js"
+                asp-fallback-test="window.jQuery"
+                crossorigin="anonymous"
+                integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT">
+        </script>
+        <script src="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.7/bootstrap.min.js"
+                asp-fallback-src="~/lib/bootstrap/dist/js/bootstrap.min.js"
+                asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal"
+                crossorigin="anonymous"
+                integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa">
+        </script>
+        <script src="~/js/site.min.js" asp-append-version="true"></script>
+    </environment>
+
+    <environment include="Development">
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+        <script src="~/js/site.js" asp-append-version="true"></script>
+    </environment>
+</head>
+<body>
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand">HowToDo</a>
+            </div>
+            <div class="navbar-collapse collapse">
+                <!--Theme-->
+                <ul class="nav navbar-nav navbar-right">
+                    @if (ViewBag.Theme == "dark")
+                    {
+                        <li><a class="far fa-sun" id="changetheme" style="cursor: pointer;"></a></li>
+                    }
+                    else
+                    {
+                        <li><a class="far fa-moon" id="changetheme" style="cursor: pointer;"></a></li>
+                    }
+                    <!--SignIn/SignOut-->
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <li><a asp-area="" asp-controller="UserPage" asp-action="UserPage" asp-route-Id="@User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value">@Localizer["MyPage"]</a></li>
+                        <li><a asp-area="" asp-controller="Account" asp-action="SignOut">@Localizer["SignOut"]</a></li>
+                    }
+                    else
+                    {
+                        <li><a asp-area="" asp-controller="Account" asp-action="SignIn">@Localizer["SignIn"]</a></li>
+                    }
+                </ul>
+                <div>
+                    <!--Search-->
+                    <form class="navbar-form" asp-action="Search" asp-controller="Home">
+                        <div class="form-group has-feedback has-search">
+                            <input type="text" class="form-control" name="text" placeholder="@Localizer["Search"]" />
+                            <span class="glyphicon glyphicon-search form-control-feedback"></span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        @RenderBody()
+    </div>
+    <script src="~/js/bootstrap-tagsinput.js"></script>
+    <script src="~/js/bootstrap-markdown.js"></script>
+    <script src="~/js/to-markdown.js"></script>
+    <script src="~/js/markdown.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
