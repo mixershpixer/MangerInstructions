@@ -121,7 +121,7 @@
     <value>Активность</value>
   </data>
   <data name="Add" xml:space="preserve">
-    <value>Добавить</value>
+    <value>Добавить инструкцию</value>
   </data>
   <data name="AssignAsAdmin" xml:space="preserve">
     <value>Назначить админом</value>

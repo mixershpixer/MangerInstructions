@@ -1,4 +1,6 @@
 ﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Localization
+@using System.Security.Claims
 @inject IViewLocalizer Localizer
 <!DOCTYPE html>
 <html>
@@ -69,7 +71,13 @@
             </div>
             <div class="navbar-collapse collapse">
                 <!--Theme-->
+
                 <ul class="nav navbar-nav navbar-right">
+                    @if (ViewBag.Locale == null || ViewBag.Locale == true)
+                    {
+                        <li style="padding:15px"><label>@Localizer["Language"]:</label></li>
+                        <li style="padding:10px 15px"> @await Html.PartialAsync("_SelectLanguagePartial")</li>
+                    }
                     @if (ViewBag.Theme == "dark")
                     {
                         <li><a class="far fa-sun" id="changetheme" style="cursor: pointer;"></a></li>
@@ -88,6 +96,7 @@
                     {
                         <li><a asp-area="" asp-controller="Account" asp-action="SignIn">@Localizer["SignIn"]</a></li>
                     }
+
                 </ul>
                 <div>
                     <!--Search-->

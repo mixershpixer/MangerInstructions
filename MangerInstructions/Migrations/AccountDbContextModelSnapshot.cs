@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace HowToDo.Migrations
 {
-    [DbContext(typeof(AccountDbContext))]
+    [DbContext(typeof(MangerInstructionsDbContext))]
     partial class AccountDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

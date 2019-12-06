@@ -8,7 +8,9 @@ namespace MangerInstructions.Models
     public class Vote
     {
         public String Id { get; set; }
+
         public virtual User User { get; set; }
+
         public int Rating { get; set; }
 
         public String InstructionId { get; set; }

@@ -46,16 +46,6 @@
                 <li class="list-group-item text-right"><span class="pull-left"><strong>@Localizer["Comments"]</strong></span>@Model.Comments.Count</li>
                 <li class="list-group-item text-right"><span class="pull-left"><strong>@Localizer["Likes"]</strong></span>@Model.Likes.Count</li>
             </ul>
-            <!--Language-->
-            <div>
-                @{
-                    var requestCulture = Context.Features.Get<IRequestCultureFeature>();
-                }
-                <div>
-                    <label>@Localizer["Language"]:</label>
-                    @await Html.PartialAsync("_SelectLanguagePartial")
-                </div>
-            </div>
             @if (isAdmin)
             {
                 <div>

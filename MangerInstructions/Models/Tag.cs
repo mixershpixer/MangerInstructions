@@ -8,6 +8,7 @@ namespace MangerInstructions.Models
     public class Tag
     {
         public String Id { get; set; }
+
         public String TagName { get; set; }
 
         public String InstructionId { get; set; }

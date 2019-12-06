@@ -54,7 +54,7 @@ namespace MangerInstructions
         private void SetDataBaseContext(IServiceCollection services)
         {
             string connectionString = Configuration.GetConnectionString("DefaultConnection");
-            services.AddDbContext<AccountDbContext>(options => options.UseSqlServer(connectionString));
+            services.AddDbContext<MangerInstructionsDbContext>(options => options.UseSqlServer(connectionString));
 
             services.AddIdentity<User, IdentityRole>(opts =>
             {

@@ -11,14 +11,23 @@ namespace MangerInstructions.Models
         //private List<Comment> comments = new List<Comment>();
 
         public String Id { get; set; }
+
         public virtual User Author { get; set; }
+
         public String Name { get; set; }
+
         public String ShortDescription { get; set; }
+
         public virtual String CategoryIndex { get; set; }
+
         public DateTime DateTime { get; set; }
+
         public virtual List<Tag> Tags { get; set; } = new List<Tag>();
+
         public virtual List<Vote> Votes { get; set; } = new List<Vote>();
+
         public virtual List<Comment> Comments { get; set; } = new List<Comment>();
+
         public virtual List<StepInstruction> Steps { get; set; } = new List<StepInstruction>();
 
         public String PersonalPageId { get; set; }

@@ -8,6 +8,7 @@ namespace MangerInstructions.Models
     public class PersonalPage
     {
         public String Id { get; set; }
+
         public virtual List<Instruction> Instructions { get; set; } = new List<Instruction>();
 
         public String UserId { get; set; }

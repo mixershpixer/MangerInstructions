@@ -17,7 +17,7 @@ namespace MangerInstructions.Controllers
 {
     public class AccountController : Controller
     {
-        private AccountDbContext accountDbContext;
+        private MangerInstructionsDbContext mangerInstructionsDbContext;
         private readonly IAuthenticationSchemeProvider authenticationSchemeProvider;
         private readonly IStringLocalizer<SharedResource> sharedLocalizer;
 
@@ -26,7 +26,7 @@ namespace MangerInstructions.Controllers
             var userId = User.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier)?.Value;
             if (userId != null)
             {
-                var user = accountDbContext.Users.FirstOrDefault(u => u.Id == userId);
+                var user = mangerInstructionsDbContext.Users.FirstOrDefault(u => u.Id == userId);
                 if (user == null)
                     HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme).GetAwaiter();
                 else if (user.IsBlock)
@@ -37,10 +37,10 @@ namespace MangerInstructions.Controllers
             }
         }
 
-        public AccountController(AccountDbContext context, IStringLocalizer<SharedResource> sharedLocalizer,
+        public AccountController(MangerInstructionsDbContext context, IStringLocalizer<SharedResource> sharedLocalizer,
             IAuthenticationSchemeProvider authenticationSchemeProvider)
         {
-            accountDbContext = context;
+            mangerInstructionsDbContext = context;
             this.sharedLocalizer = sharedLocalizer;
             this.authenticationSchemeProvider = authenticationSchemeProvider;
         }
@@ -49,11 +49,10 @@ namespace MangerInstructions.Controllers
         public async Task<IActionResult> ChangeUserName(String name)
         {
             var userId = User.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier).Value;
-            var user = accountDbContext.Users.FirstOrDefault(u => u.Id == userId);
+            var user = mangerInstructionsDbContext.Users.FirstOrDefault(u => u.Id == userId);
             user.Name = name;
-            await accountDbContext.SaveChangesAsync();
+            await mangerInstructionsDbContext.SaveChangesAsync();
             return Ok();
-
         }
 
         [HttpGet]
@@ -75,7 +74,7 @@ namespace MangerInstructions.Controllers
         {
             if (ModelState.IsValid)
             {
-                User userMail = await accountDbContext.Users.FirstOrDefaultAsync(u => u.Email == registerUser.Email);
+                User userMail = await mangerInstructionsDbContext.Users.FirstOrDefaultAsync(u => u.Email == registerUser.Email);
                 if (userMail != null)
                     ModelState.AddModelError("", sharedLocalizer["ExistMail"]);
                 else
@@ -88,8 +87,8 @@ namespace MangerInstructions.Controllers
                         PersonalPage = new PersonalPage(),
                         Role = Role.User
                     };
-                    accountDbContext.Users.Add(user);
-                    await accountDbContext.SaveChangesAsync();
+                    mangerInstructionsDbContext.Users.Add(user);
+                    await mangerInstructionsDbContext.SaveChangesAsync();
                     await AuthenticateAsync(user);
                     return RedirectToAction("Index", "Home");
                 }
@@ -108,7 +107,7 @@ namespace MangerInstructions.Controllers
         {
             String userName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
             String userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-            User user = await accountDbContext.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+            User user = await mangerInstructionsDbContext.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             if (user == null)
                 return RedirectToAction("CreateAccount", "Account", new { userName = userName, userEmail = userEmail, provider = provider });
@@ -145,7 +144,7 @@ namespace MangerInstructions.Controllers
         {
             if (ModelState.IsValid)
             {
-                User user = await accountDbContext.Users.FirstOrDefaultAsync(u => u.Email == loginUser.Email && u.Password == loginUser.Password);
+                User user = await mangerInstructionsDbContext.Users.FirstOrDefaultAsync(u => u.Email == loginUser.Email && u.Password == loginUser.Password);
                 if (user != null)
                 {
                     if (user.IsBlock)

@@ -121,7 +121,7 @@
     <value>Activity</value>
   </data>
   <data name="Add" xml:space="preserve">
-    <value>Add</value>
+    <value>Add instruction</value>
   </data>
   <data name="AssignAsAdmin" xml:space="preserve">
     <value>Assign as admin</value>

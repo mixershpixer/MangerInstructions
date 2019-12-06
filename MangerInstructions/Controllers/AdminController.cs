@@ -16,11 +16,11 @@ namespace MangerInstructions.Controllers
     public class AdminController : Controller
     {
 
-        private AccountDbContext accountDbContext;
+        private MangerInstructionsDbContext mangerInstructionsDbContext;
 
-        public AdminController(AccountDbContext accountDbContext)
+        public AdminController(MangerInstructionsDbContext mangerInstructionsDbContext)
         {
-            this.accountDbContext = accountDbContext;
+            this.mangerInstructionsDbContext = mangerInstructionsDbContext;
         }
 
         public override void OnActionExecuting(ActionExecutingContext context)
@@ -28,7 +28,7 @@ namespace MangerInstructions.Controllers
             var userId = User.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier)?.Value;
             if (userId != null)
             {
-                var user = accountDbContext.Users.FirstOrDefault(u => u.Id == userId);
+                var user = mangerInstructionsDbContext.Users.FirstOrDefault(u => u.Id == userId);
                 if (user == null)
                     HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme).GetAwaiter();
                 else if (user.IsBlock && user.Role != Role.Admin)
@@ -46,61 +46,61 @@ namespace MangerInstructions.Controllers
 
         public async Task<IActionResult> AssignAs(String Id)
         {
-            var user = accountDbContext.Users.FirstOrDefault(u => u.Id == Id);
+            var user = mangerInstructionsDbContext.Users.FirstOrDefault(u => u.Id == Id);
             if (user != null)
             {
                 if (user.Role == Role.Admin)
                     user.Role = Role.User;
                 else
                     user.Role = Role.Admin;
-                await accountDbContext.SaveChangesAsync();
+                await mangerInstructionsDbContext.SaveChangesAsync();
             }
             return Ok();
         }
 
         public async Task<IActionResult> DeleteAccount(String Id)
         {
-            var user = accountDbContext.Users.FirstOrDefault(u => u.Id == Id);
+            var user = mangerInstructionsDbContext.Users.FirstOrDefault(u => u.Id == Id);
             if (user != null)
             {
                 user.Comments.Clear();
                 user.Votes.Clear();
                 user.Likes.Clear();
-                accountDbContext.Users.Remove(user);
-                await accountDbContext.SaveChangesAsync();
+                mangerInstructionsDbContext.Users.Remove(user);
+                await mangerInstructionsDbContext.SaveChangesAsync();
             }
             return RedirectToAction("Index", "Home");
         }
 
         public async Task<IActionResult> BlockUser(String Id)
         {
-            var user = accountDbContext.Users.FirstOrDefault(u => u.Id == Id);
+            var user = mangerInstructionsDbContext.Users.FirstOrDefault(u => u.Id == Id);
             if (user != null)
             {
                 user.IsBlock = !user.IsBlock;
-                await accountDbContext.SaveChangesAsync();
+                await mangerInstructionsDbContext.SaveChangesAsync();
             }
             return Ok();
         }
 
         public async Task<IActionResult> ChangeUserEmail(String Id, String email)
         {
-            var user = accountDbContext.Users.FirstOrDefault(u => u.Id == Id);
+            var user = mangerInstructionsDbContext.Users.FirstOrDefault(u => u.Id == Id);
             if (user != null && !String.IsNullOrEmpty(email))
             {
                 user.Email = email;
-                await accountDbContext.SaveChangesAsync();
+                await mangerInstructionsDbContext.SaveChangesAsync();
             }
             return Ok();
         }
 
         public async Task<IActionResult> ChangeUserName(String Id, String name)
         {
-            var user = accountDbContext.Users.FirstOrDefault(u => u.Id == Id);
+            var user = mangerInstructionsDbContext.Users.FirstOrDefault(u => u.Id == Id);
             if (user != null && !String.IsNullOrEmpty(name))
             {
                 user.Name = name;
-                await accountDbContext.SaveChangesAsync();
+                await mangerInstructionsDbContext.SaveChangesAsync();
             }
             return Ok();
         }

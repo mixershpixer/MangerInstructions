@@ -9,15 +9,21 @@ namespace MangerInstructions.ViewModel
     public class InstructionViewModel
     {
         public String Id { get; set; }
+
         public User Author { get; set; }
+
         [Required(ErrorMessage = "EnterNameOfInstruction")]
         public string Name { get; set; }
+
         [Required(ErrorMessage = "SelectCategory")]
         public string Category { get; set; }
+
         [MaxLength(300)]
         [Required(ErrorMessage = "EnterDescription")]
         public string ShortDescription { get; set; }
+
         public List<StepInstructionViewModel> Steps { get; set; } = new List<StepInstructionViewModel>();
+
         public string Tags { get; set; }
 
         public InstructionViewModel() { }

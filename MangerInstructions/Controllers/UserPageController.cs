@@ -24,7 +24,7 @@ namespace MangerInstructions.Controllers
     [Route("Profile")]
     public class UserPageController : Controller
     {
-        private AccountDbContext accountDbContext;
+        private MangerInstructionsDbContext mangerInstructionsDbContext;
         private readonly IStringLocalizer<SharedResource> sharedLocalizer;
         private IHostingEnvironment appEnvironment;
 
@@ -33,7 +33,7 @@ namespace MangerInstructions.Controllers
             var userId = User.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier)?.Value;
             if (userId != null)
             {
-                var user = accountDbContext.Users.FirstOrDefault(u => u.Id == userId);
+                var user = mangerInstructionsDbContext.Users.FirstOrDefault(u => u.Id == userId);
                 if (user == null)
                     HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme).GetAwaiter();
                 else if (user.IsBlock)
@@ -44,9 +44,9 @@ namespace MangerInstructions.Controllers
             }
         }
 
-        public UserPageController(AccountDbContext context, IStringLocalizer<SharedResource> sharedLocalizer, IHostingEnvironment appEnvironment)
+        public UserPageController(MangerInstructionsDbContext context, IStringLocalizer<SharedResource> sharedLocalizer, IHostingEnvironment appEnvironment)
         {
-            accountDbContext = context;
+            mangerInstructionsDbContext = context;
             this.sharedLocalizer = sharedLocalizer;
             this.appEnvironment = appEnvironment;
         }
@@ -55,10 +55,10 @@ namespace MangerInstructions.Controllers
         public async Task<IActionResult> SearchUserPage(String textSearch, String Id)
         {
             var userId = User.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier)?.Value;
-            var user = await accountDbContext.Users.FirstOrDefaultAsync(u => u.Id == Id);
+            var user = await mangerInstructionsDbContext.Users.FirstOrDefaultAsync(u => u.Id == Id);
             if (!String.IsNullOrEmpty(textSearch) && user != null)
             {
-                var instructions = accountDbContext.Instructions.Where(i => i.Author.Id == Id).FullTextSearchQuery(textSearch).ToList();
+                var instructions = mangerInstructionsDbContext.Instructions.Where(i => i.Author.Id == Id).FullTextSearchQuery(textSearch).ToList();
                 user.PersonalPage.Instructions.Clear();
                 user.PersonalPage.Instructions = instructions;
             }
@@ -70,7 +70,7 @@ namespace MangerInstructions.Controllers
         public async Task<IActionResult> ByRatingForUser(String Id)
         {
             var userId = User.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier)?.Value;
-            var user = await accountDbContext.Users.FirstOrDefaultAsync(u => u.Id == Id);
+            var user = await mangerInstructionsDbContext.Users.FirstOrDefaultAsync(u => u.Id == Id);
             if (user == null)
                 return RedirectToAction("Index");
             ViewBag.Owner = (Id == userId);
@@ -82,7 +82,7 @@ namespace MangerInstructions.Controllers
         public async Task<IActionResult> NewestForUser(String Id)
         {
             var userId = User.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier)?.Value;
-            var user = await accountDbContext.Users.FirstOrDefaultAsync(u => u.Id == Id);
+            var user = await mangerInstructionsDbContext.Users.FirstOrDefaultAsync(u => u.Id == Id);
             if (user == null)
                 return RedirectToAction("Index");
             ViewBag.Owner = (Id == userId);
@@ -94,7 +94,7 @@ namespace MangerInstructions.Controllers
         public async Task<IActionResult> OlderForUser(String Id)
         {
             var userId = User.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier)?.Value;
-            var user = await accountDbContext.Users.FirstOrDefaultAsync(u => u.Id == Id);
+            var user = await mangerInstructionsDbContext.Users.FirstOrDefaultAsync(u => u.Id == Id);
             if (user == null)
                 return RedirectToAction("Index");
             ViewBag.Owner = (Id == userId);
@@ -108,7 +108,7 @@ namespace MangerInstructions.Controllers
         {
             var userId = User.Claims.FirstOrDefault(u => u.Type == ClaimTypes.NameIdentifier)?.Value;
             ViewBag.Owner = (Id == userId);
-            var user = accountDbContext.Users.FirstOrDefault(u => u.Id == Id);
+            var user = mangerInstructionsDbContext.Users.FirstOrDefault(u => u.Id == Id);
             return View(user);
         }
 
@@ -139,7 +139,7 @@ namespace MangerInstructions.Controllers
         public async Task<IActionResult> CreateInstruction(InstructionViewModel instructionViewModel)
         {
             var userId = User.Claims.FirstOrDefault(u => u.Type == ClaimTypes.NameIdentifier).Value;
-            var user = await accountDbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            var user = await mangerInstructionsDbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
             UpdateImage(instructionViewModel);
             Instruction newInstruction = ConvertToInstuction(instructionViewModel);
             newInstruction.Author = user;
@@ -147,7 +147,7 @@ namespace MangerInstructions.Controllers
             {
                 String instructionId = TempData["InstructionId"] as String;
                 TempData.Clear();
-                Instruction oldInstruction = await accountDbContext.Instructions.FirstOrDefaultAsync(i => i.Id == instructionId);
+                Instruction oldInstruction = await mangerInstructionsDbContext.Instructions.FirstOrDefaultAsync(i => i.Id == instructionId);
                 newInstruction.Comments = oldInstruction.Comments;
                 newInstruction.Votes.AddRange(oldInstruction.Votes);
                 user.PersonalPage.AddInstruction(newInstruction);
@@ -155,7 +155,7 @@ namespace MangerInstructions.Controllers
             }
             else
                 user.PersonalPage.AddInstruction(newInstruction);
-            await accountDbContext.SaveChangesAsync();
+            await mangerInstructionsDbContext.SaveChangesAsync();
             return RedirectToAction("UserPage", new { Id = userId });
         }
 
@@ -172,8 +172,9 @@ namespace MangerInstructions.Controllers
         [Route("Edit")]
         public async Task<IActionResult> Edit(String instructionId)
         {
-            var instruction = await accountDbContext.Instructions.FirstOrDefaultAsync(i => i.Id == instructionId);
+            var instruction = await mangerInstructionsDbContext.Instructions.FirstOrDefaultAsync(i => i.Id == instructionId);
             ViewBag.Categories = GetCategories();
+            ViewBag.Locale = false;
             TempData["InstructionId"] = instructionId;
             return View(new InstructionViewModel(instruction));
         }
@@ -182,12 +183,12 @@ namespace MangerInstructions.Controllers
         [Route("Delete")]
         public async Task<IActionResult> Delete(String instructionId)
         {
-            var instruction = await accountDbContext.Instructions.FirstOrDefaultAsync(i => i.Id == instructionId);
-            var user = await accountDbContext.Users.FirstOrDefaultAsync(u => u.Id == instruction.Author.Id);
+            var instruction = await mangerInstructionsDbContext.Instructions.FirstOrDefaultAsync(i => i.Id == instructionId);
+            var user = await mangerInstructionsDbContext.Users.FirstOrDefaultAsync(u => u.Id == instruction.Author.Id);
             foreach (var step in instruction.Steps)
                 DeleteImage(step.ImageLinks);
             user.PersonalPage.RemoveInstruction(instruction);
-            await accountDbContext.SaveChangesAsync();
+            await mangerInstructionsDbContext.SaveChangesAsync();
             return RedirectToAction("UserPage", new { Id = user.Id });
         }
 
@@ -248,7 +249,7 @@ namespace MangerInstructions.Controllers
 
         private List<SelectListItem> GetCategories()
         {
-            var categiriesIndex = accountDbContext.Categories.ToArray();
+            var categiriesIndex = mangerInstructionsDbContext.Categories.ToArray();
             List<SelectListItem> categories = new List<SelectListItem>();
             categories.Add(new SelectListItem { Value = "", Selected = true });
             for (int i = 0; i < categiriesIndex.Length; ++i)

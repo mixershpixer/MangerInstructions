@@ -18,14 +18,19 @@ namespace MangerInstructions.Controllers
 {
     public class HomeController : Controller
     {
-        private AccountDbContext accountDbContext;
+        private MangerInstructionsDbContext mangerInstructionsDbContext;
+
+        public HomeController(MangerInstructionsDbContext mangerInstructionsDbContext)
+        {
+            this.mangerInstructionsDbContext = mangerInstructionsDbContext;
+        }
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             var userId = User.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier)?.Value;
             if (userId != null)
             {
-                var user = accountDbContext.Users.FirstOrDefault(u => u.Id == userId);
+                var user = mangerInstructionsDbContext.Users.FirstOrDefault(u => u.Id == userId);
                 if (user == null)
                     HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme).GetAwaiter();
                 else if (user.IsBlock)
@@ -42,8 +47,8 @@ namespace MangerInstructions.Controllers
             HashSet<Instruction> instructions = new HashSet<Instruction>();
             if (!String.IsNullOrEmpty(text))
             {
-                instructions = accountDbContext.Instructions.FullTextSearchQuery(text).ToHashSet();
-                var findByCommentInstructions = accountDbContext.Comments.FullTextSearchQuery(text).Select(i => i.Instruction).ToHashSet();
+                instructions = mangerInstructionsDbContext.Instructions.FullTextSearchQuery(text).ToHashSet();
+                var findByCommentInstructions = mangerInstructionsDbContext.Comments.FullTextSearchQuery(text).Select(i => i.Instruction).ToHashSet();
                 instructions.UnionWith(findByCommentInstructions);
             }
             ViewBag.Category = GetCategory();
@@ -51,17 +56,12 @@ namespace MangerInstructions.Controllers
             return View("Index", instructions.ToList());
         }
 
-        public HomeController(AccountDbContext accountDbContext)
-        {
-            this.accountDbContext = accountDbContext;
-        }
-
         [HttpGet]
         public IActionResult Index()
         {
             ViewBag.Category = GetCategory();
             ViewBag.Tags = GetTopTags();
-            return View(accountDbContext.Instructions.OrderByDescending(t => t.DateTime).ToList());
+            return View(mangerInstructionsDbContext.Instructions.OrderByDescending(t => t.DateTime).ToList());
         }
 
         [Route("ByRating")]
@@ -69,8 +69,7 @@ namespace MangerInstructions.Controllers
         {
             ViewBag.Category = GetCategory();
             ViewBag.Tags = GetTopTags();
-            // ToList() - to avoid errors associated with lazy loading
-            return View("Index", accountDbContext.Instructions.ToList().OrderByDescending(r => r.GetRating()));
+            return View("Index", mangerInstructionsDbContext.Instructions.ToList().OrderByDescending(r => r.GetRating()));
         }
 
         [Route("Newest")]
@@ -78,7 +77,7 @@ namespace MangerInstructions.Controllers
         {
             ViewBag.Category = GetCategory();
             ViewBag.Tags = GetTopTags();
-            return View("Index", accountDbContext.Instructions.OrderByDescending(t => t.DateTime));
+            return View("Index", mangerInstructionsDbContext.Instructions.OrderByDescending(t => t.DateTime));
         }
 
         [Route("Older")]
@@ -86,13 +85,13 @@ namespace MangerInstructions.Controllers
         {
             ViewBag.Category = GetCategory();
             ViewBag.Tags = GetTopTags();
-            return View("Index", accountDbContext.Instructions.OrderBy(t => t.DateTime));
+            return View("Index", mangerInstructionsDbContext.Instructions.OrderBy(t => t.DateTime));
         }
 
         [Route("SearchByTag")]
         public IActionResult SearchByTag(String tag)
         {
-            var instructions = accountDbContext.Instructions.Where(t => t.Tags.Any(n => n.TagName == tag)).ToList();
+            var instructions = mangerInstructionsDbContext.Instructions.Where(t => t.Tags.Any(n => n.TagName == tag)).ToList();
             ViewBag.Category = GetCategory();
             ViewBag.Tags = GetTopTags();
             return View("Index", instructions);
@@ -101,7 +100,7 @@ namespace MangerInstructions.Controllers
         [Route("SearchByCategory")]
         public IActionResult SearchByCategory(String index)
         {
-            var instructions = accountDbContext.Instructions.Where(c => c.CategoryIndex == index).ToList();
+            var instructions = mangerInstructionsDbContext.Instructions.Where(c => c.CategoryIndex == index).ToList();
             ViewBag.Category = GetCategory();
             ViewBag.Tags = GetTopTags();
             return View("Index", instructions);
@@ -109,18 +108,18 @@ namespace MangerInstructions.Controllers
 
         public async Task<IActionResult> AddComment(String idInstruction, String text)
         {
-            var instruction = await accountDbContext.Instructions.FirstOrDefaultAsync(i => i.Id == idInstruction);
+            var instruction = await mangerInstructionsDbContext.Instructions.FirstOrDefaultAsync(i => i.Id == idInstruction);
             if (instruction != null)
             {
                 var userId = User.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier)?.Value;
-                var user = await accountDbContext.Users.FirstAsync(u => u.Id == userId);
+                var user = await mangerInstructionsDbContext.Users.FirstAsync(u => u.Id == userId);
                 instruction.AddComment(new Comment
                 {
                     User = user,
                     Text = text,
                     Time = DateTime.Now
                 });
-                await accountDbContext.SaveChangesAsync();
+                await mangerInstructionsDbContext.SaveChangesAsync();
             }
             return Ok();
         }
@@ -128,8 +127,8 @@ namespace MangerInstructions.Controllers
         public async Task<IActionResult> Like(String idComment)
         {
             var userId = User.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier)?.Value;
-            var user = await accountDbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
-            var comment = await accountDbContext.Comments.FirstOrDefaultAsync(c => c.Id == idComment);
+            var user = await mangerInstructionsDbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            var comment = await mangerInstructionsDbContext.Comments.FirstOrDefaultAsync(c => c.Id == idComment);
             if (comment != null && user != null)
             {
                 var like = comment.Likes.FirstOrDefault(l => l.User.Id == user.Id);
@@ -137,29 +136,29 @@ namespace MangerInstructions.Controllers
                     comment.Likes.Add(new Like { User = user });
                 else
                     comment.Likes.Remove(like);
-                await accountDbContext.SaveChangesAsync();
+                await mangerInstructionsDbContext.SaveChangesAsync();
             }
             return Ok();
         }
 
         public async Task<IActionResult> LoadComments(String idInstruction)
         {
-            var instruction = await accountDbContext.Instructions.FirstOrDefaultAsync(i => i.Id == idInstruction);
+            var instruction = await mangerInstructionsDbContext.Instructions.FirstOrDefaultAsync(i => i.Id == idInstruction);
             return PartialView("_Comments", instruction.Comments.OrderBy(t => t.Time).ToList());
         }
 
         public async Task<IActionResult> RemoveComment(String idComment)
         {
-            var comment = await accountDbContext.Comments.FirstOrDefaultAsync(c => c.Id == idComment);
+            var comment = await mangerInstructionsDbContext.Comments.FirstOrDefaultAsync(c => c.Id == idComment);
             if (comment != null)
             {
                 var userId = User.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier)?.Value;
-                var user = await accountDbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                var user = await mangerInstructionsDbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null && user.Id == comment.User.Id)
                 {
                     var instruction = comment.Instruction;
                     instruction.RemoveComment(comment);
-                    await accountDbContext.SaveChangesAsync();
+                    await mangerInstructionsDbContext.SaveChangesAsync();
                 }
             }
             return Ok();
@@ -169,7 +168,7 @@ namespace MangerInstructions.Controllers
         [Route("Page/{id:guid}")]
         public IActionResult InstructionPage(String Id)
         {
-            var instruction = accountDbContext.Instructions.FirstOrDefault(i => i.Id == Id);
+            var instruction = mangerInstructionsDbContext.Instructions.FirstOrDefault(i => i.Id == Id);
             if (instruction != null)
                 return View(instruction);
             else
@@ -179,14 +178,14 @@ namespace MangerInstructions.Controllers
         public async Task<String> SetVote(String idInstruction, int rating)
         {
             var userId = User.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier)?.Value;
-            var user = await accountDbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
-            var instruction = await accountDbContext.Instructions.FirstOrDefaultAsync(i => i.Id == idInstruction);
+            var user = await mangerInstructionsDbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            var instruction = await mangerInstructionsDbContext.Instructions.FirstOrDefaultAsync(i => i.Id == idInstruction);
             if (user != null && instruction != null)
             {
                 if (instruction.Votes.Any(v => v.User.Id == userId))
                     instruction.RemoveVoteOfUser(userId);
                 instruction.Votes.Add(new Vote { Rating = rating, User = user });
-                await accountDbContext.SaveChangesAsync();
+                await mangerInstructionsDbContext.SaveChangesAsync();
                 return $"{instruction.GetRating():#.##}";
             }
             return "0";
@@ -201,7 +200,7 @@ namespace MangerInstructions.Controllers
 
         public async Task<String> GetVotes(String idInstruction)
         {
-            var instruction = await accountDbContext.Instructions.FirstOrDefaultAsync(i => i.Id == idInstruction);
+            var instruction = await mangerInstructionsDbContext.Instructions.FirstOrDefaultAsync(i => i.Id == idInstruction);
             if (instruction != null)
                 return $"{instruction.GetRating():#.##}";
             else
@@ -221,13 +220,13 @@ namespace MangerInstructions.Controllers
 
         private List<Category> GetCategory()
         {
-            return accountDbContext.Categories.ToList(); ;
+            return mangerInstructionsDbContext.Categories.ToList(); ;
         }
 
         private List<KeyValuePair<String, int>> GetTopTags()
         {
             Dictionary<String, int> tags = new Dictionary<String, int>();
-            var tagArray = accountDbContext.Tags.Select(n => n.TagName).ToArray();
+            var tagArray = mangerInstructionsDbContext.Tags.Select(n => n.TagName).ToArray();
             for (int i = 0; i < tagArray.Count(); ++i)
             {
                 if (tags.ContainsKey(tagArray[i]))

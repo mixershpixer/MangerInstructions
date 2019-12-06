@@ -7,20 +7,8 @@
 }
 
 <div>
-    <div class="row">
-        <div class="pull-right col-sm-3 col-md-2 col-lg-2">
-            @{
-                var requestCulture = Context.Features.Get<IRequestCultureFeature>();
-            }
-            <div>
-                <label>@Localizer["Language"]:</label>
-                @await Html.PartialAsync("_SelectLanguagePartial")
-            </div>
-
-        </div>
-    </div>
     <hr class="visible-xs" />
-    <div>
+    <div style="margin-top:10px">
         @if (Model.Count() > 0)
         {
             <div class="col-sm-offset-0 col-md-offset-0 col-lg-offset-1 col-xs-12 col-sm-12 col-md-8 col-lg-8 text-center">
@@ -103,7 +91,7 @@
                             <p></p>
                             @if (instruction.Tags.Count != 0)
                             {
-                                @: <i class="glyphicon glyphicon-tags"></i> @Localizer["Tags"] :
+                                @: <i class="glyphicon glyphicon-tags"> </i> @Localizer["Tags"] :
                             }
                             @foreach (var tag in instruction.Tags)
                             {

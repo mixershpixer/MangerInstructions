@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace HowToDo.Migrations
 {
-    [DbContext(typeof(AccountDbContext))]
+    [DbContext(typeof(MangerInstructionsDbContext))]
     [Migration("20190308231246_initial")]
     partial class initial
     {
